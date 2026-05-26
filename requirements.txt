@@ -1,0 +1,2 @@
+aiogram==3.7.0
+tradingview-ta==3.3.0
