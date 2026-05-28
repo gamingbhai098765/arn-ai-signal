@@ -7,16 +7,12 @@ from aiogram.client.default import DefaultBotProperties
 from tradingview_ta import TA_Handler, Interval
 
 import asyncio
-import os
 
 # =========================================
 # BOT TOKEN
 # =========================================
 
-TOKEN = os.getenv("8242361758:AAHa14jEVgJ7_cHTxchLlJwvTL2ZfQJLKqw")
-
-if not TOKEN:
-    raise ValueError("BOT_TOKEN not found in Railway Variables")
+TOKEN = "8242361758:AAHa14jEVgJ7_cHTxchLlJwvTL2ZfQJLKqw"
 
 # =========================================
 # VALID IDS
@@ -27,6 +23,19 @@ VALID_IDS = [
     "76281922",
     "91827364"
 ]
+
+# =========================================
+# STICKERS
+# =========================================
+
+# UP STICKER
+UP_STICKER = "CAACAgUAAxkBAAEerjJqFVv_yxP7VlPW_KvfA2Bf5vEtTgACIRIAApDJ4VdyhhZGljNoZzsE"
+
+# DOWN STICKER
+DOWN_STICKER = "CAACAgUAAxkBAAEerjRqFVwhxlCk-C5Q3ghKgOQuYr5yNwACExIAAmAE4VckxLxVodLv_zsE"
+
+# WAIT STICKER
+WAIT_STICKER = "CAACAgUAAxkBAAEerjhqFVxTAs4-IgpzTvLLNIB_2XgoYQACfhIAAjmgCFR5E9TfmpAuVDsE"
 
 # =========================================
 # BOT
@@ -72,12 +81,18 @@ user_pair = {}
 
 pair_keyboard = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="EURUSD"), KeyboardButton(text="GBPUSD")],
-        [KeyboardButton(text="USDJPY"), KeyboardButton(text="AUDUSD")],
-        [KeyboardButton(text="USDCAD"), KeyboardButton(text="USDCHF")],
-        [KeyboardButton(text="NZDUSD"), KeyboardButton(text="EURJPY")],
-        [KeyboardButton(text="EURGBP"), KeyboardButton(text="GBPJPY")],
-        [KeyboardButton(text="AUDJPY"), KeyboardButton(text="EURAUD")]
+        [KeyboardButton(text="EURUSD")],
+        [KeyboardButton(text="GBPUSD")],
+        [KeyboardButton(text="USDJPY")],
+        [KeyboardButton(text="AUDUSD")],
+        [KeyboardButton(text="USDCAD")],
+        [KeyboardButton(text="USDCHF")],
+        [KeyboardButton(text="NZDUSD")],
+        [KeyboardButton(text="EURJPY")],
+        [KeyboardButton(text="EURGBP")],
+        [KeyboardButton(text="GBPJPY")],
+        [KeyboardButton(text="AUDJPY")],
+        [KeyboardButton(text="EURAUD")]
     ],
     resize_keyboard=True
 )
@@ -89,8 +104,8 @@ pair_keyboard = ReplyKeyboardMarkup(
 time_keyboard = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="1min")],
+        [KeyboardButton(text="2min")],
         [KeyboardButton(text="5min")],
-        [KeyboardButton(text="15min")],
         [KeyboardButton(text="🔙 Back")]
     ],
     resize_keyboard=True
@@ -130,7 +145,7 @@ async def signals(message: types.Message):
         return
 
     # =====================================
-    # VERIFY ID
+    # VERIFY TRADER ID
     # =====================================
 
     if text.isdigit():
@@ -146,9 +161,9 @@ async def signals(message: types.Message):
 
             await message.answer(
                 "❌ Invalid Trader ID\n\n"
-                "📌 Create account first.\n"
-                "🔗 https://broker-qx.pro/sign-up/?lid=1672051\n\n"
-                "📩 Message on @Arntrader"
+                "📌 Create account from your referral link first."
+                "🔗 https://broker-qx.pro/sign-up/?lid=1672051"
+                " message on @Arntrader"
             )
 
         return
@@ -172,7 +187,7 @@ async def signals(message: types.Message):
     # TIMEFRAME
     # =====================================
 
-    if text in ["1MIN", "5MIN", "15MIN"]:
+    if text in ["1MIN", "2MIN", "5MIN"]:
 
         pair = user_pair.get(message.chat.id)
 
@@ -194,13 +209,13 @@ async def signals(message: types.Message):
 
                 interval = Interval.INTERVAL_1_MINUTE
 
-            elif text == "5MIN":
+            elif text == "2MIN":
 
-                interval = Interval.INTERVAL_5_MINUTES
+                interval = Interval.INTERVAL_1_MINUTE
 
             else:
 
-                interval = Interval.INTERVAL_15_MINUTES
+                interval = Interval.INTERVAL_5_MINUTES
 
             # =================================
             # ANALYSIS
@@ -218,9 +233,9 @@ async def signals(message: types.Message):
             summary = analysis.summary
             indicators = analysis.indicators
 
-            buy = summary.get("BUY", 0)
-            sell = summary.get("SELL", 0)
-            neutral = summary.get("NEUTRAL", 0)
+            buy = summary["BUY"]
+            sell = summary["SELL"]
+            neutral = summary["NEUTRAL"]
 
             rsi = round(indicators.get("RSI", 0), 2)
 
@@ -281,29 +296,44 @@ async def signals(message: types.Message):
                 trend = "SELL"
                 strength = "MEDIUM SELL"
 
+            # WAIT
+
+            else:
+
+                signal = "WAIT"
+                trend = "NEUTRAL"
+                strength = "WEAK"
+
             # =================================
-            # EMOJI
+            # SEND STICKER
             # =================================
 
             if signal == "UP":
 
-                emoji = "🟢"
+                await bot.send_sticker(
+                    chat_id=message.chat.id,
+                    sticker=UP_STICKER
+                )
 
             elif signal == "DOWN":
 
-                emoji = "🔴"
+                await bot.send_sticker(
+                    chat_id=message.chat.id,
+                    sticker=DOWN_STICKER
+                )
 
             else:
 
-                emoji = "🟡"
+                await bot.send_sticker(
+                    chat_id=message.chat.id,
+                    sticker=WAIT_STICKER
+                )
 
             # =================================
-            # RESULT
+            # RESULT MESSAGE
             # =================================
 
             result = f"""
-{emoji} <b>SIGNAL : {signal}</b>
-
 📊 <b>PAIR:</b> {pair}
 
 ⏰ <b>TIMEFRAME:</b> {text}
@@ -326,6 +356,8 @@ async def signals(message: types.Message):
 📌 EMA50: {ema50}
 
 🔥 STRENGTH: {strength}
+
+🚀 SIGNAL : {signal}
 """
 
             await message.answer(result)
@@ -337,7 +369,7 @@ async def signals(message: types.Message):
             )
 
 # =========================================
-# MAIN
+# RUN BOT
 # =========================================
 
 async def main():
@@ -345,10 +377,6 @@ async def main():
     print("BOT STARTED")
 
     await dp.start_polling(bot)
-
-# =========================================
-# RUN
-# =========================================
 
 if __name__ == "__main__":
 
