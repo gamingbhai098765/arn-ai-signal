@@ -10,10 +10,13 @@ import asyncio
 import os
 
 # =========================================
-# TOKEN
+# BOT TOKEN
 # =========================================
 
 TOKEN = os.getenv("8242361758:AAHa14jEVgJ7_cHTxchLlJwvTL2ZfQJLKqw")
+
+if not TOKEN:
+    raise ValueError("BOT_TOKEN not found in Railway Variables")
 
 # =========================================
 # VALID IDS
@@ -69,18 +72,12 @@ user_pair = {}
 
 pair_keyboard = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="EURUSD")],
-        [KeyboardButton(text="GBPUSD")],
-        [KeyboardButton(text="USDJPY")],
-        [KeyboardButton(text="AUDUSD")],
-        [KeyboardButton(text="USDCAD")],
-        [KeyboardButton(text="USDCHF")],
-        [KeyboardButton(text="NZDUSD")],
-        [KeyboardButton(text="EURJPY")],
-        [KeyboardButton(text="EURGBP")],
-        [KeyboardButton(text="GBPJPY")],
-        [KeyboardButton(text="AUDJPY")],
-        [KeyboardButton(text="EURAUD")]
+        [KeyboardButton(text="EURUSD"), KeyboardButton(text="GBPUSD")],
+        [KeyboardButton(text="USDJPY"), KeyboardButton(text="AUDUSD")],
+        [KeyboardButton(text="USDCAD"), KeyboardButton(text="USDCHF")],
+        [KeyboardButton(text="NZDUSD"), KeyboardButton(text="EURJPY")],
+        [KeyboardButton(text="EURGBP"), KeyboardButton(text="GBPJPY")],
+        [KeyboardButton(text="AUDJPY"), KeyboardButton(text="EURAUD")]
     ],
     resize_keyboard=True
 )
@@ -133,7 +130,7 @@ async def signals(message: types.Message):
         return
 
     # =====================================
-    # VERIFY TRADER ID
+    # VERIFY ID
     # =====================================
 
     if text.isdigit():
@@ -149,7 +146,7 @@ async def signals(message: types.Message):
 
             await message.answer(
                 "❌ Invalid Trader ID\n\n"
-                "📌 Create account from your referral link first.\n"
+                "📌 Create account first.\n"
                 "🔗 https://broker-qx.pro/sign-up/?lid=1672051\n\n"
                 "📩 Message on @Arntrader"
             )
@@ -285,7 +282,7 @@ async def signals(message: types.Message):
                 strength = "MEDIUM SELL"
 
             # =================================
-            # SIGNAL MESSAGE
+            # EMOJI
             # =================================
 
             if signal == "UP":
@@ -301,7 +298,7 @@ async def signals(message: types.Message):
                 emoji = "🟡"
 
             # =================================
-            # RESULT MESSAGE
+            # RESULT
             # =================================
 
             result = f"""
