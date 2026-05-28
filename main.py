@@ -7,12 +7,13 @@ from aiogram.client.default import DefaultBotProperties
 from tradingview_ta import TA_Handler, Interval
 
 import asyncio
+import os
 
 # =========================================
-# BOT TOKEN
+# TOKEN
 # =========================================
 
-TOKEN = "8242361758:AAHa14jEVgJ7_cHTxchLlJwvTL2ZfQJLKqw"
+TOKEN = os.getenv("8242361758:AAHa14jEVgJ7_cHTxchLlJwvTL2ZfQJLKqw")
 
 # =========================================
 # VALID IDS
@@ -23,19 +24,6 @@ VALID_IDS = [
     "76281922",
     "91827364"
 ]
-
-# =========================================
-# STICKERS
-# =========================================
-
-# UP STICKER
-UP_STICKER = "CAACAgUAAxkBAAEerjJqFVv_yxP7VlPW_KvfA2Bf5vEtTgACIRIAApDJ4VdyhhZGljNoZzsE"
-
-# DOWN STICKER
-DOWN_STICKER = "CAACAgUAAxkBAAEerjRqFVwhxlCk-C5Q3ghKgOQuYr5yNwACExIAAmAE4VckxLxVodLv_zsE"
-
-# WAIT STICKER
-WAIT_STICKER = "CAACAgUAAxkBAAEerjhqFVxTAs4-IgpzTvLLNIB_2XgoYQACfhIAAjmgCFR5E9TfmpAuVDsE"
 
 # =========================================
 # BOT
@@ -104,8 +92,8 @@ pair_keyboard = ReplyKeyboardMarkup(
 time_keyboard = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="1min")],
-        [KeyboardButton(text="2min")],
         [KeyboardButton(text="5min")],
+        [KeyboardButton(text="15min")],
         [KeyboardButton(text="🔙 Back")]
     ],
     resize_keyboard=True
@@ -161,9 +149,9 @@ async def signals(message: types.Message):
 
             await message.answer(
                 "❌ Invalid Trader ID\n\n"
-                "📌 Create account from your referral link first."
-                "🔗 https://broker-qx.pro/sign-up/?lid=1672051"
-                " message on @Arntrader"
+                "📌 Create account from your referral link first.\n"
+                "🔗 https://broker-qx.pro/sign-up/?lid=1672051\n\n"
+                "📩 Message on @Arntrader"
             )
 
         return
@@ -187,7 +175,7 @@ async def signals(message: types.Message):
     # TIMEFRAME
     # =====================================
 
-    if text in ["1MIN", "2MIN", "5MIN"]:
+    if text in ["1MIN", "5MIN", "15MIN"]:
 
         pair = user_pair.get(message.chat.id)
 
@@ -209,13 +197,13 @@ async def signals(message: types.Message):
 
                 interval = Interval.INTERVAL_1_MINUTE
 
-            elif text == "2MIN":
+            elif text == "5MIN":
 
-                interval = Interval.INTERVAL_1_MINUTE
+                interval = Interval.INTERVAL_5_MINUTES
 
             else:
 
-                interval = Interval.INTERVAL_5_MINUTES
+                interval = Interval.INTERVAL_15_MINUTES
 
             # =================================
             # ANALYSIS
@@ -233,9 +221,9 @@ async def signals(message: types.Message):
             summary = analysis.summary
             indicators = analysis.indicators
 
-            buy = summary["BUY"]
-            sell = summary["SELL"]
-            neutral = summary["NEUTRAL"]
+            buy = summary.get("BUY", 0)
+            sell = summary.get("SELL", 0)
+            neutral = summary.get("NEUTRAL", 0)
 
             rsi = round(indicators.get("RSI", 0), 2)
 
@@ -265,7 +253,7 @@ async def signals(message: types.Message):
 
                 signal = "UP"
                 trend = "BUY"
-                strength = "STRONG BUY(Use money management)"
+                strength = "STRONG BUY"
 
             # STRONG SELL
 
@@ -278,7 +266,7 @@ async def signals(message: types.Message):
 
                 signal = "DOWN"
                 trend = "SELL"
-                strength = "STRONG SELL (Use money management)"
+                strength = "STRONG SELL"
 
             # MEDIUM BUY
 
@@ -286,7 +274,7 @@ async def signals(message: types.Message):
 
                 signal = "UP"
                 trend = "BUY"
-                strength = "MEDIUM BUY(use low risk with money management)"
+                strength = "MEDIUM BUY"
 
             # MEDIUM SELL
 
@@ -294,46 +282,31 @@ async def signals(message: types.Message):
 
                 signal = "DOWN"
                 trend = "SELL"
-                strength = "MEDIUM SELL(use low risk with money management)"
-
-            # WAIT
-
-            else:
-
-                signal = "WAIT"
-                trend = "NEUTRAL"
-                strength = "WEAK"
+                strength = "MEDIUM SELL"
 
             # =================================
-            # SEND STICKER
+            # SIGNAL MESSAGE
             # =================================
 
             if signal == "UP":
 
-                await bot.send_sticker(
-                    chat_id=message.chat.id,
-                    sticker=UP_STICKER
-                )
+                emoji = "🟢"
 
             elif signal == "DOWN":
 
-                await bot.send_sticker(
-                    chat_id=message.chat.id,
-                    sticker=DOWN_STICKER
-                )
+                emoji = "🔴"
 
             else:
 
-                await bot.send_sticker(
-                    chat_id=message.chat.id,
-                    sticker=WAIT_STICKER
-                )
+                emoji = "🟡"
 
             # =================================
             # RESULT MESSAGE
             # =================================
 
             result = f"""
+{emoji} <b>SIGNAL : {signal}</b>
+
 📊 <b>PAIR:</b> {pair}
 
 ⏰ <b>TIMEFRAME:</b> {text}
@@ -341,7 +314,7 @@ async def signals(message: types.Message):
 📈 <b>LIVE MARKET ANALYSIS</b>
 
 🟢 BUY: {buy}
-?? SELL: {sell}
+🔴 SELL: {sell}
 🟡 NEUTRAL: {neutral}
 
 📌 TREND: {trend}
@@ -356,8 +329,6 @@ async def signals(message: types.Message):
 📌 EMA50: {ema50}
 
 🔥 STRENGTH: {strength}
-
-🚀 SIGNAL : {signal}
 """
 
             await message.answer(result)
@@ -369,7 +340,7 @@ async def signals(message: types.Message):
             )
 
 # =========================================
-# RUN BOT
+# MAIN
 # =========================================
 
 async def main():
@@ -377,6 +348,10 @@ async def main():
     print("BOT STARTED")
 
     await dp.start_polling(bot)
+
+# =========================================
+# RUN
+# =========================================
 
 if __name__ == "__main__":
 
